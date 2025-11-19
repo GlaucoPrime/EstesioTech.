@@ -1,0 +1,15 @@
+<resources>
+    <!-- Cores base do tema (podem ser usadas se você não usar Material3) -->
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- ✅ SUAS CORES PERSONALIZADAS ESTÃO AQUI ✅ -->
+    <color name="brand_background">#101820</color>
+    <color name="brand_primary">#00ACC1</color>
+    <color name="brand_secondary">#80DEEA</color>
+    <color name="brand_text_hint">#B0B0B0</color>
+    <color name="brand_bubble_received">#FF9800</color> <!-- Laranja -->
+</resources>

@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Usando Theme.MaterialComponents para ser compatível com os botões e layouts -->
+    <style name="Theme.EstesioTech" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Cor de fundo primária -->
+        <item name="android:windowBackground">@color/brand_background</item>
+
+        <!-- Cores principais do app -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Cor secundária -->
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorSecondaryVariant">@color/brand_secondary</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Cor da barra de status -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/brand_background</item>
+        <!-- Ícones da barra de status claros -->
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>

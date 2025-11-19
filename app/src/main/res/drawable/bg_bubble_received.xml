@@ -1,0 +1,10 @@
+<!-- Balão de chat laranja (recebido) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/brand_bubble_received" /> <!-- Cor Laranja -->
+    <corners android:radius="12dp"
+        android:topLeftRadius="0dp"
+        android:topRightRadius="12dp"
+        android:bottomLeftRadius="12dp"
+        android:bottomRightRadius="12dp"/>
+</shape>

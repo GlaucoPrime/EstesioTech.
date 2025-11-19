@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_background"
+    android:gravity="center"
+    android:padding="24dp"
+    tools:context=".TesteActivity">
+
+    <TextView
+        android:id="@+id/placeholder_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:fontFamily="sans-serif-condensed"
+        android:text="@string/test_placeholder_text"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/back_to_home_button"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@id/placeholder_text"
+        android:layout_marginTop="32dp"
+        android:text="@string/test_placeholder_button"
+        android:textSize="18sp"
+        app:backgroundTint="@color/brand_primary"
+        app:cornerRadius="8dp" />
+
+</RelativeLayout>

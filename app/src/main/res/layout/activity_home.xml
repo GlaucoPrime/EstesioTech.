@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="@color/brand_background"
+    tools:context=".HomeActivity">
+
+    <TextView
+        android:id="@+id/menuTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-condensed"
+        android:text="@string/home_title"
+        android:textColor="@color/white"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="48dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/connectDeviceButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/home_button_connect"
+        android:textSize="18sp"
+        app:backgroundTint="@color/brand_primary"
+        app:cornerRadius="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/startTestButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/home_button_start_test"
+        android:textSize="18sp"
+        app:backgroundTint="@color/brand_primary"
+        app:cornerRadius="8dp"
+        android:enabled="false"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/testHistoryButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/home_button_history"
+        android:textSize="18sp"
+        app:backgroundTint="@color/brand_primary"
+        app:cornerRadius="8dp"/>
+
+</LinearLayout>
