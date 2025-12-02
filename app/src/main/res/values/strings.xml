@@ -1,11 +1,8 @@
 <resources>
-    <!-- ✅ AQUI ESTÁ A MUDANÇA -->
     <string name="app_name">EstesioTech</string>
 
     <!-- Strings do Login -->
-    <string name="app_title">EstesioTech</string>
-
-    <!-- ... (o resto continua igual) ... -->
+    <string name="app_title">ESTESIOTECH</string>
     <string name="hint_login">Login</string>
     <string name="hint_password">Senha</string>
     <string name="button_login">Entrar</string>
@@ -38,22 +35,25 @@
     <string name="unknown_device">Dispositivo Desconhecido</string>
     <string name="device_info_format">%1$s\n%2$s</string>
     <string name="scan_error">Erro no scan: %d</string>
+
+    <!-- ✅ ESTA É A LINHA QUE FALTAVA E QUE VAI RESOLVER SEU PROBLEMA -->
     <string name="scanning_devices">Procurando dispositivos...</string>
+
     <string name="enable_bluetooth_first">Por favor, ative o Bluetooth primeiro.</string>
     <string name="permissions_not_granted">Permissões não concedidas.</string>
     <string name="location_required_title">Localização Necessária</string>
-    <string name="location_required_message">A localização precisa estar ativa para escanear dispositivos BLE (exigência do Android).</string>
+    <string name="location_required_message">A localização precisa estar ativa para escanear dispositivos BLE.</string>
     <string name="enable">Ativar</string>
     <string name="cancel">Cancelar</string>
 
-    <!-- Strings do Chat (DeviceControlActivity) -->
+    <!-- Strings do Chat -->
     <string name="chat_title">Chat ESP32</string>
     <string name="chat_hint">Digite a mensagem</string>
     <string name="send_button_desc">Enviar Mensagem</string>
     <string name="menu_home">Home</string>
     <string name="menu_disconnect">Desconectar</string>
 
-    <!-- Strings do Teste (Placeholder) -->
+    <!-- Strings do Teste -->
     <string name="test_placeholder_text">Ainda não implementado</string>
     <string name="test_placeholder_button">Voltar ao Menu</string>
 

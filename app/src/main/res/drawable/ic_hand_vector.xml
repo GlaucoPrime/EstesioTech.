@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+       Em vez de tentar embutir um PNG dentro de uma tag <vector> (o que causa erros),
+       usamos um layer-list simples que aponta para o seu PNG.
+
+       Isso resolve o erro de "No resource to outline" e mantém o comportamento visual.
+    -->
+    <item>
+        <bitmap
+            android:src="@drawable/right_hand"
+            android:gravity="center" />
+    </item>
+</layer-list>

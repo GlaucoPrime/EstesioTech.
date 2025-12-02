@@ -1,13 +1,12 @@
 package com.code.EstesioTech
 
-// Data class para guardar cada mensagem do chat
 data class ChatMessage(
     val message: String,
-    val type: Int // Define se é ENVIADA, RECEBIDA ou SISTEMA
+    val type: Int
 ) {
     companion object {
-        const val TYPE_SENT = 0
-        const val TYPE_RECEIVED = 1
-        const val TYPE_SYSTEM = 2 // Para "Conectado", "Desconectado"
+        const val TYPE_SENT = 0      // Mensagem enviada por você (Azul, Direita)
+        const val TYPE_RECEIVED = 1  // Mensagem recebida da ESP (Laranja, Esquerda)
+        const val TYPE_SYSTEM = 2    // Mensagem de sistema (Cinza, Centro)
     }
 }

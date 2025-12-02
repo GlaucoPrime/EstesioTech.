@@ -11,16 +11,13 @@ import java.util.*
 object BleManager {
     private const val TAG = "BleManager"
 
-    // UUIDs padrão do serviço UART
     private val SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-    // private val CHARACTERISTIC_UUID_RX = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E") // REMOVIDO
-    private val CHARACTERISTIC_UUID_TX = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E") // Recepção (ESP32 -> App)
+    private val CHARACTERISTIC_UUID_TX = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CCCD_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothGatt: BluetoothGatt? = null
-    private var txCharacteristic: BluetoothGattCharacteristic? = null // Para receber (Notify)
-    // private var rxCharacteristic: BluetoothGattCharacteristic? = null // REMOVIDO
+    private var txCharacteristic: BluetoothGattCharacteristic? = null
 
     private var isDeviceConnected = false
     fun getConnectedDeviceAddress(): String? = connectedDeviceAddress
@@ -91,12 +88,10 @@ object BleManager {
         bluetoothGatt = null
 
         txCharacteristic = null
-        // rxCharacteristic = null // REMOVIDO
 
         listener?.onDisconnected()
     }
 
-    // A função de escrita agora reporta o erro corretamente
     fun write(text: String) {
         listener?.onError("Função de escrita não suportada (ESP32 apenas envia).")
         Log.e(TAG, "Tentativa de escrita falhou: Característica RX (...0002) não existe.")
@@ -131,7 +126,6 @@ object BleManager {
                     return
                 }
 
-                // Procura APENAS a característica TX
                 txCharacteristic = service.getCharacteristic(CHARACTERISTIC_UUID_TX)
 
                 if (txCharacteristic == null) {
@@ -192,7 +186,6 @@ object BleManager {
             }
         }
 
-        // Função Helper (sem mudanças)
         private fun handleCharacteristicChange(uuid: UUID?, value: ByteArray?) {
             if (uuid == CHARACTERISTIC_UUID_TX) {
                 val text = value?.toString(Charsets.UTF_8) ?: ""
@@ -201,35 +194,27 @@ object BleManager {
             }
         }
 
-        // --- ✅ AQUI ESTÁ A CORREÇÃO ---
-
-        // MÉTODO ANTIGO (só roda em API < 33)
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             super.onCharacteristicChanged(gatt, characteristic)
-            // ✅ SÓ executa se for um Android ANTIGO (menor que API 33)
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 handleCharacteristicChange(characteristic.uuid, characteristic.value)
             }
         }
 
-        // NOVO MÉTODO (só roda em API 33+)
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
             super.onCharacteristicChanged(gatt, characteristic, value)
-            // ✅ SÓ executa se for um Android NOVO (API 33 ou superior)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 handleCharacteristicChange(characteristic.uuid, value)
             }
         }
-        // --- FIM DA CORREÇÃO ---
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             super.onCharacteristicWrite(gatt, characteristic, status)
-            // (Esta função não é mais chamada por você, mas é bom mantê-la)
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.e(TAG, "Falha ao enviar dado (write status: $status)")
                 listener?.onError("Falha ao enviar dado para o dispositivo.")

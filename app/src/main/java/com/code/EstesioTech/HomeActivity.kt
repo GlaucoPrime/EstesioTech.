@@ -2,59 +2,135 @@ package com.code.EstesioTech
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.code.EstesioTech.ui.theme.EstesioTechTheme
+import com.code.EstesioTech.MainActivity
 
-class HomeActivity : AppCompatActivity() {
-
-    private lateinit var connectDeviceButton: Button
-    private lateinit var startTestButton: Button
-    private lateinit var testHistoryButton: Button
-
+class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home)
+        setContent {
+            EstesioTechTheme {
+                val context = LocalContext.current
+                var isConnected by remember { mutableStateOf(BleManager.isConnected()) }
 
-        connectDeviceButton = findViewById(R.id.connectDeviceButton)
-        startTestButton = findViewById(R.id.startTestButton)
-        testHistoryButton = findViewById(R.id.testHistoryButton)
+                // Observar o ciclo de vida para atualizar o estado do botão ao voltar para a tela
+                val lifecycleOwner = LocalLifecycleOwner.current
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            isConnected = BleManager.isConnected()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
 
-        // Botão CONECTAR (leva ao Scan)
-        connectDeviceButton.setOnClickListener {
-            if (BleManager.isConnected()) {
-                Toast.makeText(this, "Você já está conectado.", Toast.LENGTH_SHORT).show()
-            } else {
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
+                HomeScreen(
+                    isConnected = isConnected,
+                    onConnectClick = {
+                        if (isConnected) {
+                            Toast.makeText(context, "Você já está conectado.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            startActivity(Intent(context, MainActivity::class.java))
+                        }
+                    },
+                    onStartTestClick = {
+                        if (isConnected) {
+                            startActivity(Intent(context, SelectionActivity::class.java))
+                        } else {
+                            Toast.makeText(context, "Nenhum dispositivo conectado.", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    onHistoryClick = {
+                        Toast.makeText(context, "Histórico não implementado.", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
-
-        // Botão INICIAR TESTE (leva ao Placeholder)
-        startTestButton.setOnClickListener {
-            // Este botão só é clicável se estivermos conectados,
-            // mas o levamos para a tela placeholder
-            val intent = Intent(this, TesteActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Botão HISTÓRICO (Toast)
-        testHistoryButton.setOnClickListener {
-            Toast.makeText(this, "Funcionalidade de histórico ainda não implementada.", Toast.LENGTH_SHORT).show()
-        }
     }
+}
 
-    override fun onResume() {
-        super.onResume()
-        // Atualiza o estado dos botões sempre que a tela aparece
-        updateTestButtonState()
+@Composable
+fun HomeScreen(
+    isConnected: Boolean,
+    onConnectClick: () -> Unit,
+    onStartTestClick: () -> Unit,
+    onHistoryClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "MENU PRINCIPAL",
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 48.dp)
+        )
+
+        MenuButton(
+            text = "CONECTAR AO DISPOSITIVO",
+            onClick = onConnectClick,
+            enabled = !isConnected
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MenuButton(
+            text = "INICIAR TESTE",
+            onClick = onStartTestClick,
+            enabled = isConnected
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MenuButton(
+            text = "HISTÓRICO DE TESTES",
+            onClick = onHistoryClick,
+            enabled = true
+        )
     }
+}
 
-    private fun updateTestButtonState() {
-        // Habilita/Desabilita o botão Iniciar Teste
-        startTestButton.isEnabled = BleManager.isConnected()
-
-        // Habilita/Desabilita o botão Conectar
-        connectDeviceButton.isEnabled = !BleManager.isConnected()
+@Composable
+fun MenuButton(text: String, onClick: () -> Unit, enabled: Boolean) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            disabledContainerColor = Color.Gray
+        )
+    ) {
+        Text(text = text, fontSize = 18.sp, color = Color.White)
     }
 }
