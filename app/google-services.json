@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "618786756146",
+    "project_id": "estesiotech",
+    "storage_bucket": "estesiotech.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:618786756146:android:008e343430535a2355ce2b",
+        "android_client_info": {
+          "package_name": "com.code.EstesioTech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpBskKR9qJi9fa92yXY37OcDb-Z-ph3Ko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

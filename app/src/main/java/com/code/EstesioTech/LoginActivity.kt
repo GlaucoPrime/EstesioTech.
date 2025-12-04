@@ -6,38 +6,59 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.code.EstesioTech.ui.theme.EstesioTechTheme
 
-class LoginActivity : ComponentActivity() { // Note: ComponentActivity em vez de AppCompatActivity
+class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (EstesioCloud.isUserLoggedIn()) {
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+            return
+        }
+
         setContent {
             EstesioTechTheme {
                 LoginScreen(
-                    onLoginClick = { login, password ->
-                        if (login.isNotEmpty() && password.isNotEmpty()) {
-                            val intent = Intent(this, HomeActivity::class.java)
-                            startActivity(intent)
-                            finish()
+                    onLoginClick = { crm, uf, password ->
+                        if (crm.isNotEmpty() && uf.isNotEmpty() && password.isNotEmpty()) {
+                            Toast.makeText(this, "Autenticando...", Toast.LENGTH_SHORT).show()
+
+                            // Login agora exige UF
+                            EstesioCloud.login(crm, uf, password,
+                                onSuccess = {
+                                    startActivity(Intent(this, HomeActivity::class.java))
+                                    finish()
+                                },
+                                onError = { msg ->
+                                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         } else {
-                            Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Preencha CRM, Estado e Senha.", Toast.LENGTH_SHORT).show()
                         }
                     },
                     onRegisterClick = {
-                        val intent = Intent(this, RegisterActivity::class.java)
-                        startActivity(intent)
+                        startActivity(Intent(this, RegisterActivity::class.java))
                     }
                 )
             }
@@ -46,105 +67,85 @@ class LoginActivity : ComponentActivity() { // Note: ComponentActivity em vez de
 }
 
 @Composable
-fun LoginScreen(
-    onLoginClick: (String, String) -> Unit,
-    onRegisterClick: () -> Unit
-) {
-    var login by remember { mutableStateOf("") }
+fun LoginScreen(onLoginClick: (String, String, String) -> Unit, onRegisterClick: () -> Unit) {
+    var crm by remember { mutableStateOf("") }
+    var uf by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364))
+                )
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "ESTESIOTECH",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 48.dp)
-        )
-
-        OutlinedTextField(
-            value = login,
-            onValueChange = { login = it },
-            label = { Text("Login") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
-                focusedLabelColor = MaterialTheme.colorScheme.secondary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Senha") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
-                focusedLabelColor = MaterialTheme.colorScheme.secondary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Card(
+            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2634).copy(alpha = 0.9f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
-            Button(
-                onClick = { onLoginClick(login, password) },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Entrar", fontSize = 18.sp)
-            }
+                Text("ESTESIOTECH", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00ACC1), letterSpacing = 2.sp)
+                Text("Acesso Profissional", fontSize = 14.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 32.dp))
 
-            Spacer(modifier = Modifier.width(8.dp))
+                TechTextField(
+                    value = crm,
+                    onValueChange = { crm = it },
+                    label = "CRM",
+                    icon = Icons.Default.Badge,
+                    keyboardType = KeyboardType.Number
+                )
 
-            TextButton(
-                onClick = {
-                    login = ""
-                    password = ""
-                },
-                modifier = Modifier
-                    .weight(0.5f)
-                    .height(50.dp)
-            ) {
-                Text("Limpar", color = MaterialTheme.colorScheme.secondary, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campo de Estado
+                TechStateDropdown(selectedState = uf, onStateSelected = { uf = it })
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TechTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Senha",
+                    icon = Icons.Default.Lock,
+                    isPassword = true
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = { onLoginClick(crm, uf, password) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .border(1.dp, Color(0xFF00ACC1).copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00ACC1).copy(alpha = 0.2f),
+                        contentColor = Color(0xFF00ACC1)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Login, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("ACESSAR SISTEMA", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Novo por aqui? Criar conta",
+                    color = Color(0xFF80DEEA),
+                    modifier = Modifier.clickable { onRegisterClick() },
+                    fontSize = 14.sp
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "Ainda não tem conta? Cadastre-se",
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .clickable { onRegisterClick() }
-                .padding(8.dp)
-        )
     }
 }

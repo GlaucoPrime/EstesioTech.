@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,11 +18,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha // ✅ O IMPORT QUE SALVA TUDO
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -41,14 +41,16 @@ class TesteActivity : ComponentActivity(), BleManager.ConnectionListener {
     private val currentBleValue = mutableIntStateOf(0)
     private var lastValidValue = 0
 
+    // Armazena os resultados para salvar na nuvem
     private val resultsMap = mutableStateMapOf<Int, Int>()
     private val isBleConnected = mutableStateOf(false)
+    private var currentBodyPart = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val deviceAddress = intent.getStringExtra("DEVICE_ADDRESS")
-        val bodyPart = intent.getStringExtra("BODY_PART") ?: "mao_direita"
+        currentBodyPart = intent.getStringExtra("BODY_PART") ?: "mao_direita"
 
         BleManager.setListener(this)
         isBleConnected.value = BleManager.isConnected()
@@ -60,7 +62,7 @@ class TesteActivity : ComponentActivity(), BleManager.ConnectionListener {
         setContent {
             EstesioTechTheme {
                 TesteScreen(
-                    bodyPart = bodyPart,
+                    bodyPart = currentBodyPart,
                     results = resultsMap,
                     activePointIndex = activePointIndex.intValue,
                     currentBleValue = currentBleValue.intValue,
@@ -74,12 +76,35 @@ class TesteActivity : ComponentActivity(), BleManager.ConnectionListener {
                         activePointIndex.intValue = -1
                     },
                     onBackClick = { finish() },
-                    onResetPoint = { index ->
-                        resultsMap.remove(index)
+                    onResetPoint = { index -> resultsMap.remove(index) },
+                    onSaveToCloud = {
+                        saveResultsToCloud()
                     }
                 )
             }
         }
+    }
+
+    private fun saveResultsToCloud() {
+        if (resultsMap.isEmpty()) {
+            Toast.makeText(this, "Nenhum ponto testado para salvar.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "Salvando na nuvem...", Toast.LENGTH_SHORT).show()
+
+        // AQUI USAMOS A FUNÇÃO QUE ESTAVA "UNUSED"
+        EstesioCloud.saveTestResult(
+            bodyPart = currentBodyPart,
+            results = resultsMap.toMap(), // Converte para mapa fixo
+            onSuccess = {
+                Toast.makeText(this, "Sucesso! Teste salvo no histórico.", Toast.LENGTH_LONG).show()
+                finish() // Fecha a tela após salvar
+            },
+            onError = { erro ->
+                Toast.makeText(this, "Erro ao salvar: $erro", Toast.LENGTH_LONG).show()
+            }
+        )
     }
 
     override fun onDataReceived(data: String) {
@@ -93,7 +118,7 @@ class TesteActivity : ComponentActivity(), BleManager.ConnectionListener {
                 runOnUiThread {
                     resultsMap[currentIndex] = finalValue
                     activePointIndex.intValue = -1
-                    Toast.makeText(this, "Salvo: Nível $finalValue", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Ponto registrado!", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
@@ -130,8 +155,11 @@ fun TesteScreen(
     onPointSelect: (Int) -> Unit,
     onCloseMeasurement: () -> Unit,
     onBackClick: () -> Unit,
-    onResetPoint: (Int) -> Unit
+    onResetPoint: (Int) -> Unit,
+    onSaveToCloud: () -> Unit
 ) {
+    val isHand = bodyPart.contains("mao")
+
     val title = when(bodyPart) {
         "mao_direita" -> "Mão Direita"
         "mao_esquerda" -> "Mão Esquerda"
@@ -175,6 +203,12 @@ fun TesteScreen(
                         Icon(Icons.Default.ArrowBack, "Voltar", tint = Color.White)
                     }
                 },
+                actions = {
+                    // BOTÃO PARA SALVAR NA NUVEM
+                    IconButton(onClick = onSaveToCloud) {
+                        Icon(Icons.Default.CloudUpload, "Salvar", tint = Color(0xFF00ACC1))
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF101820))
             )
         },
@@ -201,60 +235,50 @@ fun TesteScreen(
                     modifier = Modifier.fillMaxSize().alpha(0.9f)
                 )
 
-                // =========================================================================
-                // MAPEAMENTO MANUAL DE CADA MEMBRO (Baseado nas suas imagens)
-                // =========================================================================
-
-                when(bodyPart) {
-                    "mao_direita" -> {
-                        // Mão Direita (Dedão na Direita, Mindinho na Esquerda)
-                        MedicalPoint(0, 0.90f, 0.35f, results[0], onPointSelect) // Dedão
-                        MedicalPoint(1, 0.70f, 0.22f, results[1], onPointSelect) // Indicador
-                        MedicalPoint(2, 0.50f, 0.15f, results[2], onPointSelect) // Médio
-                        MedicalPoint(3, 0.30f, 0.22f, results[3], onPointSelect) // Anelar
-                        MedicalPoint(4, 0.10f, 0.35f, results[4], onPointSelect) // Mindinho
-                        MedicalPoint(5, 0.20f, 0.60f, results[5], onPointSelect) // Palma (Lado Mindinho)
-                        MedicalPoint(6, 0.80f, 0.65f, results[6], onPointSelect) // Palma (Lado Dedão)
+                // --- MAPEAMENTO (O SEU MAPEAMENTO PERFEITO) ---
+                if (isHand) {
+                    when(bodyPart) {
+                        "mao_direita" -> {
+                            MedicalPoint(0, 0.90f, 0.35f, results[0], onPointSelect)
+                            MedicalPoint(1, 0.70f, 0.22f, results[1], onPointSelect)
+                            MedicalPoint(2, 0.50f, 0.15f, results[2], onPointSelect)
+                            MedicalPoint(3, 0.30f, 0.22f, results[3], onPointSelect)
+                            MedicalPoint(4, 0.10f, 0.35f, results[4], onPointSelect)
+                            MedicalPoint(5, 0.20f, 0.60f, results[5], onPointSelect)
+                            MedicalPoint(6, 0.80f, 0.65f, results[6], onPointSelect)
+                        }
+                        "mao_esquerda" -> {
+                            MedicalPoint(0, 0.10f, 0.35f, results[0], onPointSelect)
+                            MedicalPoint(1, 0.30f, 0.22f, results[1], onPointSelect)
+                            MedicalPoint(2, 0.50f, 0.15f, results[2], onPointSelect)
+                            MedicalPoint(3, 0.70f, 0.22f, results[3], onPointSelect)
+                            MedicalPoint(4, 0.90f, 0.35f, results[4], onPointSelect)
+                            MedicalPoint(5, 0.80f, 0.60f, results[5], onPointSelect)
+                            MedicalPoint(6, 0.20f, 0.65f, results[6], onPointSelect)
+                        }
                     }
-                    "mao_esquerda" -> {
-                        // Mão Esquerda (Dedão na Esquerda, Mindinho na Direita)
-                        MedicalPoint(0, 0.10f, 0.35f, results[0], onPointSelect) // Dedão
-                        MedicalPoint(1, 0.30f, 0.22f, results[1], onPointSelect) // Indicador
-                        MedicalPoint(2, 0.50f, 0.15f, results[2], onPointSelect) // Médio
-                        MedicalPoint(3, 0.70f, 0.22f, results[3], onPointSelect) // Anelar
-                        MedicalPoint(4, 0.90f, 0.35f, results[4], onPointSelect) // Mindinho
-                        MedicalPoint(5, 0.80f, 0.60f, results[5], onPointSelect) // Palma (Lado Mindinho)
-                        MedicalPoint(6, 0.20f, 0.65f, results[6], onPointSelect) // Palma (Lado Dedão)
-                    }
-                    "pe_direito" -> {
-                        // Pé Direito (Dedão na Esquerda)
-                        MedicalPoint(0, 0.35f, 0.08f, results[0], onPointSelect) // Dedão
-                        MedicalPoint(1, 0.55f, 0.12f, results[1], onPointSelect) // Dedo 2
-                        MedicalPoint(2, 0.85f, 0.20f, results[2], onPointSelect) // Mindinho
-
-                        MedicalPoint(3, 0.30f, 0.30f, results[3], onPointSelect) // Almofada Dedão
-                        MedicalPoint(4, 0.60f, 0.30f, results[4], onPointSelect) // Almofada Meio
-                        MedicalPoint(5, 0.85f, 0.35f, results[5], onPointSelect) // Almofada Mindinho
-
-                        MedicalPoint(6, 0.30f, 0.60f, results[6], onPointSelect) // Arco
-                        MedicalPoint(7, 0.75f, 0.55f, results[7], onPointSelect) // Lateral
-
-                        MedicalPoint(8, 0.50f, 0.85f, results[8], onPointSelect) // Calcanhar
-                    }
-                    "pe_esquerdo" -> {
-                        // Pé Esquerdo (Dedão na Direita) - Espelho do Direito
-                        MedicalPoint(0, 0.65f, 0.08f, results[0], onPointSelect) // Dedão
-                        MedicalPoint(1, 0.45f, 0.12f, results[1], onPointSelect) // Dedo 2
-                        MedicalPoint(2, 0.15f, 0.20f, results[2], onPointSelect) // Mindinho
-
-                        MedicalPoint(3, 0.70f, 0.30f, results[3], onPointSelect) // Almofada Dedão
-                        MedicalPoint(4, 0.40f, 0.30f, results[4], onPointSelect) // Almofada Meio
-                        MedicalPoint(5, 0.15f, 0.35f, results[5], onPointSelect) // Almofada Mindinho
-
-                        MedicalPoint(6, 0.70f, 0.60f, results[6], onPointSelect) // Arco
-                        MedicalPoint(7, 0.25f, 0.55f, results[7], onPointSelect) // Lateral
-
-                        MedicalPoint(8, 0.50f, 0.85f, results[8], onPointSelect) // Calcanhar
+                } else {
+                    if (bodyPart == "pe_direito") {
+                        MedicalPoint(0, 0.35f, 0.08f, results[0], onPointSelect)
+                        MedicalPoint(1, 0.55f, 0.12f, results[1], onPointSelect)
+                        MedicalPoint(2, 0.85f, 0.20f, results[2], onPointSelect)
+                        MedicalPoint(3, 0.30f, 0.30f, results[3], onPointSelect)
+                        MedicalPoint(4, 0.60f, 0.30f, results[4], onPointSelect)
+                        MedicalPoint(5, 0.85f, 0.35f, results[5], onPointSelect)
+                        MedicalPoint(6, 0.30f, 0.60f, results[6], onPointSelect)
+                        MedicalPoint(7, 0.75f, 0.55f, results[7], onPointSelect)
+                        MedicalPoint(8, 0.50f, 0.85f, results[8], onPointSelect)
+                    } else {
+                        // Pé Esquerdo
+                        MedicalPoint(0, 0.65f, 0.08f, results[0], onPointSelect)
+                        MedicalPoint(1, 0.45f, 0.12f, results[1], onPointSelect)
+                        MedicalPoint(2, 0.15f, 0.20f, results[2], onPointSelect)
+                        MedicalPoint(3, 0.70f, 0.30f, results[3], onPointSelect)
+                        MedicalPoint(4, 0.40f, 0.30f, results[4], onPointSelect)
+                        MedicalPoint(5, 0.15f, 0.35f, results[5], onPointSelect)
+                        MedicalPoint(6, 0.70f, 0.60f, results[6], onPointSelect)
+                        MedicalPoint(7, 0.25f, 0.55f, results[7], onPointSelect)
+                        MedicalPoint(8, 0.50f, 0.85f, results[8], onPointSelect)
                     }
                 }
             }
@@ -265,6 +289,7 @@ fun TesteScreen(
             else 0
             val globalResult = ClinicalScale.getResult(averageLevel)
 
+            // CARD INFERIOR
             Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1A242E))
@@ -278,15 +303,25 @@ fun TesteScreen(
                             .size(50.dp)
                             .clip(CircleShape)
                             .background(globalResult.color)
-                            .border(2.dp, Color.White, CircleShape), // Borda no Global também
+                            .border(2.dp, Color.White, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(if(averageLevel > 0) "$averageLevel" else "-", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text("Média Global", color = Color.Gray, fontSize = 12.sp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Diagnóstico Global", color = Color.Gray, fontSize = 12.sp)
                         Text(globalResult.description, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                    // Botão de Salvar Extra (para facilitar)
+                    if (filledValues.isNotEmpty()) {
+                        Button(
+                            onClick = onSaveToCloud,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00ACC1)),
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            Text("Salvar", fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -319,32 +354,27 @@ fun BoxWithConstraintsScope.MedicalPoint(
         label = "alpha"
     )
 
-    // Cor Padrão (Laranja do seu XML se não tiver resultado, ou a Cor Clínica se tiver)
     val baseColor = if (isDone) resultData.color else Color(0xFFFF9800)
-
-    // Se não estiver feito, pisca. Se estiver feito, fica sólido.
     val finalAlpha = if (isDone) 1f else alphaAnim
 
     Box(
         modifier = Modifier
-            // Ajuste fino: usamos as porcentagens para centralizar o ponto de 30dp
             .offset(
                 x = maxWidth * xPercent - 15.dp,
                 y = maxHeight * yPercent - 15.dp
             )
-            .size(30.dp) // Tamanho igual ao seu XML
+            .size(30.dp)
             .clip(CircleShape)
             .border(2.dp, Color.White, CircleShape)
             .background(baseColor.copy(alpha = if (isDone) 1f else 0.5f))
             .clickable { onClick(index) },
         contentAlignment = Alignment.Center
     ) {
-        // Miolo da bolinha
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(baseColor)
-                .alpha(finalAlpha) // Pisca o miolo
+                .alpha(finalAlpha)
         )
         if (isDone) {
             Icon(Icons.Default.CheckCircle, null, tint = Color.White, modifier = Modifier.size(16.dp))
@@ -376,7 +406,7 @@ fun MeasurementDialog(
                         .size(120.dp)
                         .clip(CircleShape)
                         .background(data.color)
-                        .border(4.dp, Color.White, CircleShape), // Borda no popup
+                        .border(4.dp, Color.White, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

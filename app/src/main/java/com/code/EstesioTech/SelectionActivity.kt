@@ -2,21 +2,14 @@ package com.code.EstesioTech
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowRight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,72 +19,85 @@ import androidx.compose.ui.unit.sp
 import com.code.EstesioTech.ui.theme.EstesioTechTheme
 
 class SelectionActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val deviceAddress = intent.getStringExtra("DEVICE_ADDRESS")
 
         setContent {
             EstesioTechTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF101820)) {
-                    SelectionScreen(
-                        onBackClick = { finish() },
-                        onOptionSelected = { bodyPart ->
-                            try {
-                                val intent = Intent(this, TesteActivity::class.java)
-                                intent.putExtra("DEVICE_ADDRESS", deviceAddress)
-                                intent.putExtra("BODY_PART", bodyPart)
-                                startActivity(intent)
-                            } catch (e: Exception) {
-                                // Se der erro ao abrir, mostra na tela
-                                Log.e("SelectionActivity", "Erro ao abrir tela", e)
-                                Toast.makeText(this, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                            }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF101820))
+                        .padding(24.dp)
+                ) {
+                    Text("MAPEAMENTO", color = Color(0xFF00ACC1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("Selecione a Região", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Grid Mãos
+                    Row(Modifier.weight(1f)) {
+                        AnatomyCard("Mão\nDireita", "R", Color(0xFF2196F3), Modifier.weight(1f)) {
+                            openTest(deviceAddress, "mao_direita")
                         }
-                    )
+                        Spacer(Modifier.width(16.dp))
+                        AnatomyCard("Mão\nEsquerda", "L", Color(0xFF2196F3), Modifier.weight(1f)) {
+                            openTest(deviceAddress, "mao_esquerda")
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+                    // Grid Pés
+                    Row(Modifier.weight(1f)) {
+                        AnatomyCard("Pé\nDireito", "R", Color(0xFFFF9800), Modifier.weight(1f)) {
+                            openTest(deviceAddress, "pe_direito")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        AnatomyCard("Pé\nEsquerdo", "L", Color(0xFFFF9800), Modifier.weight(1f)) {
+                            openTest(deviceAddress, "pe_esquerdo")
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-fun SelectionScreen(onBackClick: () -> Unit, onOptionSelected: (String) -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Selecione a área", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 24.dp))
-
-        ExpandableSection("MÃOS", listOf("Mão Esquerda" to "mao_esquerda", "Mão Direita" to "mao_direita"), onOptionSelected)
-        Spacer(modifier = Modifier.height(16.dp))
-        ExpandableSection("PÉS", listOf("Pé Esquerdo" to "pe_esquerdo", "Pé Direito" to "pe_direito"), onOptionSelected)
-
-        Spacer(modifier = Modifier.weight(1f))
-        Button(onClick = onBackClick, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCF6679)), modifier = Modifier.fillMaxWidth()) {
-            Text("Voltar", color = Color.White)
+    private fun openTest(address: String?, part: String) {
+        val intent = Intent(this, TesteActivity::class.java).apply {
+            putExtra("DEVICE_ADDRESS", address)
+            putExtra("BODY_PART", part)
         }
+        startActivity(intent)
     }
 }
 
 @Composable
-fun ExpandableSection(title: String, options: List<Pair<String, String>>, onOptionSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().background(Color(0xFF2C3E50)).clickable { expanded = !expanded }.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Icon(if (expanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowRight, null, tint = Color.White)
-        }
-        AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.fillMaxWidth().background(Color(0xFF34495E)).padding(8.dp)) {
-                options.forEach { (label, code) ->
-                    Row(modifier = Modifier.fillMaxWidth().clickable { onOptionSelected(code) }.padding(12.dp)) {
-                        Text(label, color = Color(0xFFBDC3C7), fontSize = 16.sp)
-                    }
+fun AnatomyCard(title: String, side: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    Card(
+        modifier = modifier.fillMaxSize().clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2634))
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = side,
+                fontSize = 100.sp,
+                fontWeight = FontWeight.Black,
+                color = color.copy(alpha = 0.1f),
+                modifier = Modifier.align(Alignment.BottomEnd).offset(x = 10.dp, y = 10.dp)
+            )
+
+            Column(modifier = Modifier.padding(20.dp)) {
+                Box(
+                    modifier = Modifier.size(40.dp).background(color.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(side, color = color, fontWeight = FontWeight.Bold)
                 }
+                Spacer(Modifier.weight(1f))
+                Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("Iniciar Teste >", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
             }
         }
     }
