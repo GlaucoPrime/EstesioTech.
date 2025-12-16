@@ -38,6 +38,7 @@ class LoginActivity : ComponentActivity() {
         val sharedPref = getSharedPreferences("EstesioPrefs", Context.MODE_PRIVATE)
         val rememberMe = sharedPref.getBoolean("remember_me", false)
 
+        // Se está logado E marcou lembrar, entra direto
         if (EstesioCloud.isUserLoggedIn() && rememberMe) {
             startActivity(Intent(this, HomeActivity::class.java))
             finish()
@@ -155,7 +156,8 @@ fun LoginScreen(onLoginClick: (String, String, String, Boolean) -> Unit, onRegis
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordDialog(onDismiss: () -> Unit) {
-    var email by remember { mutableStateOf("") }
+    var crm by remember { mutableStateOf("") }
+    var uf by remember { mutableStateOf("") }
     var sent by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -165,22 +167,24 @@ fun ForgotPasswordDialog(onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (sent) {
-                    Text("Se o e-mail estiver cadastrado, você receberá um link em instantes.", color = Color.Green, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Text("Solicitação enviada! Verifique seu e-mail.", color = Color.Green, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = onDismiss) { Text("Fechar") }
                 } else {
-                    Text("Digite seu e-mail cadastrado para receber o link.", color = Color.Gray, fontSize = 14.sp)
+                    Text("Confirme seus dados para redefinir.", color = Color.Gray, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(16.dp))
-                    TechTextField(email, { email = it }, "E-mail", Icons.Default.Email)
+                    TechTextField(crm, { crm = it }, "CRM", Icons.Default.Badge, keyboardType = KeyboardType.Number)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TechStateDropdown(selectedState = uf, onStateSelected = { uf = it })
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
-                            EstesioCloud.sendPasswordReset(email, onSuccess = { sent = true }, onError = {})
-                            sent = true // Feedback visual imediato
+                            EstesioCloud.sendPasswordReset(crm, uf, onSuccess = { sent = true }, onError = {})
+                            sent = true // Feedback imediato para o usuário não travar
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00ACC1))
                     ) {
-                        Text("Enviar Link")
+                        Text("Redefinir")
                     }
                 }
             }
@@ -188,14 +192,11 @@ fun ForgotPasswordDialog(onDismiss: () -> Unit) {
     }
 }
 
-// --- PREVIEW DO LOGIN ---
+// PREVIEW
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
     com.code.EstesioTech.ui.theme.EstesioTechTheme {
-        LoginScreen(
-            onLoginClick = { crm, uf, password, remember -> },
-            onRegisterClick = {}
-        )
+        LoginScreen(onLoginClick = { _, _, _, _ -> }, onRegisterClick = {})
     }
 }

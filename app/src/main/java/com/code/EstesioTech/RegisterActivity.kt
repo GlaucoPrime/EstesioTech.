@@ -1,5 +1,6 @@
 package com.code.EstesioTech
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,20 +32,24 @@ class RegisterActivity : ComponentActivity() {
             EstesioTechTheme {
                 RegisterScreen(
                     onRegisterClick = { name, crm, uf, pass, confirm ->
-                        if (name.isEmpty() || crm.isEmpty() || uf.isEmpty() || pass.isEmpty()) {
-                            Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
-                        } else if (pass != confirm) {
+                        if (pass != confirm) {
                             Toast.makeText(this, "As senhas não conferem.", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this, "Criando conta...", Toast.LENGTH_SHORT).show()
+                            // Feedback visual
+                            Toast.makeText(this, "Criando acesso...", Toast.LENGTH_SHORT).show()
 
-                            // Agora passamos o UF também
                             EstesioCloud.register(crm, uf, pass, name,
                                 onSuccess = {
                                     Toast.makeText(this, "Bem-vindo(a), $name!", Toast.LENGTH_LONG).show()
+                                    // AUTO-LOGIN: Vai direto pra Home
+                                    val intent = Intent(this, HomeActivity::class.java)
+                                    // Limpa a pilha para não voltar pro cadastro ao apertar voltar
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    startActivity(intent)
                                     finish()
                                 },
                                 onError = { msg ->
+                                    // Mostra o erro traduzido bonitinho
                                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
                                 }
                             )
@@ -64,7 +69,7 @@ fun RegisterScreen(
 ) {
     var name by remember { mutableStateOf("") }
     var crm by remember { mutableStateOf("") }
-    var uf by remember { mutableStateOf("") } // Estado selecionado
+    var uf by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
@@ -83,13 +88,13 @@ fun RegisterScreen(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("NOVO USUÁRIO", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("NOVO ACESSO", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Spacer(modifier = Modifier.height(24.dp))
 
                 TechTextField(name, { name = it }, "Nome Completo", Icons.Default.Person)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Linha com CRM e UF lado a lado
+                // Linha CRM e UF lado a lado
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Box(modifier = Modifier.weight(1.5f)) {
                         TechTextField(crm, { crm = it }, "CRM", Icons.Default.Badge, keyboardType = KeyboardType.Number)
@@ -118,14 +123,15 @@ fun RegisterScreen(
                 }
 
                 TextButton(onClick = onBackClick, modifier = Modifier.padding(top = 8.dp)) {
-                    Text("Cancelar", color = Color.Gray)
+                    Text("Voltar", color = Color.Gray)
                 }
             }
         }
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview
+// PREVIEW
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
     com.code.EstesioTech.ui.theme.EstesioTechTheme {

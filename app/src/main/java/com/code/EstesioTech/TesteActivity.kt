@@ -114,7 +114,7 @@ class TesteActivity : ComponentActivity(), BleManager.ConnectionListener {
             },
             onError = { erro ->
                 isSaving.value = false
-                Toast.makeText(this, "Erro: $erro", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Erro ao salvar: $erro", Toast.LENGTH_LONG).show()
             }
         )
     }
@@ -166,7 +166,6 @@ fun TesteScreen(
     onSaveToCloud: () -> Unit
 ) {
     val isHand = bodyPart.contains("mao")
-
     val title = when(bodyPart) {
         "mao_direita" -> "Mão Direita"
         "mao_esquerda" -> "Mão Esquerda"
@@ -182,7 +181,6 @@ fun TesteScreen(
         else -> R.drawable.right_hand
     }
 
-    // Proporção Ajustada (Mantida a do seu teste manual)
     val containerRatio = if (isHand) 0.8f else 0.65f
 
     Scaffold(
@@ -231,7 +229,6 @@ fun TesteScreen(
                 .padding(paddingValues)
                 .background(Brush.verticalGradient(colors = listOf(Color(0xFF101820), Color(0xFF000000))))
         ) {
-
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
@@ -239,12 +236,7 @@ fun TesteScreen(
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Caixa com proporção travada
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.95f)
-                        .aspectRatio(containerRatio)
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(0.95f).aspectRatio(containerRatio)) {
                     Image(
                         painter = painterResource(id = imageRes),
                         contentDescription = null,
@@ -257,17 +249,14 @@ fun TesteScreen(
                         val h = maxHeight
 
                         if (isHand) {
-                            // --- MÃOS (SEUS AJUSTES MANUAIS) ---
                             if(bodyPart == "mao_direita") {
-                                // Mão Direita (Valores calibrados por você)
-                                MedicalPoint(0, 0.08f, 0.35f, results[0], w, h, onPointSelect) // Ponta Mindinho
-                                MedicalPoint(1, 0.58f, 0.26f, results[1], w, h, onPointSelect) // Ponta Indicador
-                                MedicalPoint(2, 0.57f, 0.42f, results[2], w, h, onPointSelect) // Base Indicador
-                                MedicalPoint(3, 0.16f, 0.47f, results[3], w, h, onPointSelect) // Base Mindinho
-                                MedicalPoint(4, 0.86f, 0.51f, results[4], w, h, onPointSelect) // Dedão
-                                MedicalPoint(5, 0.22f, 0.61f, results[5], w, h, onPointSelect) // Canto Inf. Direito
+                                MedicalPoint(0, 0.08f, 0.35f, results[0], w, h, onPointSelect)
+                                MedicalPoint(1, 0.58f, 0.26f, results[1], w, h, onPointSelect)
+                                MedicalPoint(2, 0.57f, 0.42f, results[2], w, h, onPointSelect)
+                                MedicalPoint(3, 0.16f, 0.47f, results[3], w, h, onPointSelect)
+                                MedicalPoint(4, 0.86f, 0.51f, results[4], w, h, onPointSelect)
+                                MedicalPoint(5, 0.22f, 0.61f, results[5], w, h, onPointSelect)
                             } else {
-                                // Mão Esquerda (Espelho: 1.0 - X)
                                 MedicalPoint(0, 0.92f, 0.35f, results[0], w, h, onPointSelect)
                                 MedicalPoint(1, 0.42f, 0.26f, results[1], w, h, onPointSelect)
                                 MedicalPoint(2, 0.43f, 0.42f, results[2], w, h, onPointSelect)
@@ -276,34 +265,25 @@ fun TesteScreen(
                                 MedicalPoint(5, 0.78f, 0.61f, results[5], w, h, onPointSelect)
                             }
                         } else {
-                            // --- PÉS (SEUS AJUSTES MANUAIS) ---
                             if (bodyPart == "pe_direito") {
-                                // Pé Direito (Valores calibrados por você)
                                 MedicalPoint(0, 0.37f, 0.26f, results[0], w, h, onPointSelect)
                                 MedicalPoint(1, 0.26f, 0.48f, results[1], w, h, onPointSelect)
                                 MedicalPoint(2, 0.69f, 0.21f, results[2], w, h, onPointSelect)
-
                                 MedicalPoint(3, 0.13f, 0.34f, results[3], w, h, onPointSelect)
                                 MedicalPoint(4, 0.45f, 0.35f, results[4], w, h, onPointSelect)
                                 MedicalPoint(5, 0.77f, 0.37f, results[5], w, h, onPointSelect)
-
                                 MedicalPoint(6, 0.39f, 0.66f, results[6], w, h, onPointSelect)
                                 MedicalPoint(7, 0.74f, 0.61f, results[7], w, h, onPointSelect)
-
                                 MedicalPoint(8, 0.69f, 0.80f, results[8], w, h, onPointSelect)
                             } else {
-                                // Pé Esquerdo (Espelho: 1.0 - X)
                                 MedicalPoint(0, 0.63f, 0.26f, results[0], w, h, onPointSelect)
                                 MedicalPoint(1, 0.74f, 0.48f, results[1], w, h, onPointSelect)
                                 MedicalPoint(2, 0.31f, 0.21f, results[2], w, h, onPointSelect)
-
                                 MedicalPoint(3, 0.87f, 0.34f, results[3], w, h, onPointSelect)
                                 MedicalPoint(4, 0.55f, 0.35f, results[4], w, h, onPointSelect)
                                 MedicalPoint(5, 0.23f, 0.37f, results[5], w, h, onPointSelect)
-
                                 MedicalPoint(6, 0.61f, 0.66f, results[6], w, h, onPointSelect)
                                 MedicalPoint(7, 0.26f, 0.61f, results[7], w, h, onPointSelect)
-
                                 MedicalPoint(8, 0.31f, 0.80f, results[8], w, h, onPointSelect)
                             }
                         }
@@ -353,13 +333,7 @@ fun MedicalPoint(index: Int, xPercent: Float, yPercent: Float, resultLevel: Int?
     val offsetY = parentHeight * yPercent - 15.dp
 
     Box(
-        modifier = Modifier
-            .offset(x = offsetX, y = offsetY)
-            .size(30.dp)
-            .clip(CircleShape)
-            .border(2.dp, Color.White, CircleShape)
-            .background(baseColor.copy(alpha = if (isDone) 1f else 0.5f))
-            .clickable { onClick(index) },
+        modifier = Modifier.offset(x = offsetX, y = offsetY).size(30.dp).clip(CircleShape).border(2.dp, Color.White, CircleShape).background(baseColor.copy(alpha = if (isDone) 1f else 0.5f)).clickable { onClick(index) },
         contentAlignment = Alignment.Center
     ) {
         Box(modifier = Modifier.fillMaxSize().background(baseColor).alpha(finalAlpha))
@@ -396,7 +370,7 @@ fun MeasurementDialog(currentLevel: Int, onDismiss: () -> Unit) {
 fun TesteScreenPreview() {
     com.code.EstesioTech.ui.theme.EstesioTechTheme {
         TesteScreen(
-            bodyPart = "mao_esquerda",
+            bodyPart = "mao_direita",
             results = mapOf(0 to 1),
             activePointIndex = -1,
             currentBleValue = 0,
